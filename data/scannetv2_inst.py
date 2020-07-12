@@ -37,13 +37,13 @@ class Dataset:
 
 
     def trainLoader(self):
-        train_file_names = sorted(glob.glob(os.path.join(self.data_root, self.dataset, 'train', '*' + self.filename_suffix)))
-        self.train_files = [torch.load(i) for i in train_file_names]
+        self.train_files = sorted(glob.glob(os.path.join(self.data_root, self.dataset, 'train', '*' + self.filename_suffix)))
+        #self.train_files = [torch.load(i) for i in train_file_names]
 
         logger.info('Training samples: {}'.format(len(self.train_files)))
 
         train_set = list(range(len(self.train_files)))
-        self.train_data_loader = DataLoader(train_set, batch_size=self.batch_size, collate_fn=self.trainMerge, num_workers=self.train_workers,
+        self.train_data_loader = DataLoader(train_set, batch_size=self.batch_size, collate_fn=lambda x: x, num_workers=self.train_workers,
                                             shuffle=True, sampler=None, drop_last=True, pin_memory=True)
 
 
@@ -173,7 +173,7 @@ class Dataset:
 
         total_inst_num = 0
         for i, idx in enumerate(id):
-            xyz_origin, rgb, label, instance_label = self.train_files[idx]
+            xyz_origin, rgb, label, instance_label = torch.load(self.train_files[idx])
 
             ### jitter / flip x / rotation
             xyz_middle = self.dataAugment(xyz_origin, True, True, True)

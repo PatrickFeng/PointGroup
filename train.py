@@ -35,7 +35,7 @@ def init():
     torch.manual_seed(cfg.manual_seed)
     torch.cuda.manual_seed_all(cfg.manual_seed)
 
-def train_epoch(train_loader, model, model_fn, optimizer, epoch):
+def train_epoch(dataset, model, model_fn, optimizer, epoch):
     iter_time = utils.AverageMeter()
     data_time = utils.AverageMeter()
     am_dict = {}
@@ -43,7 +43,8 @@ def train_epoch(train_loader, model, model_fn, optimizer, epoch):
     model.train()
     start_epoch = time.time()
     end = time.time()
-    for i, batch in enumerate(train_loader):
+    train_loader = dataset.train_data_loader
+    for i, batch_id in enumerate(train_loader):
         data_time.update(time.time() - end)
         torch.cuda.empty_cache()
 
@@ -51,6 +52,7 @@ def train_epoch(train_loader, model, model_fn, optimizer, epoch):
         utils.step_learning_rate(optimizer, cfg.lr, epoch - 1, cfg.step_epoch, cfg.multiplier)
 
         ##### prepare input and forward
+        batch = dataset.trainMerge(batch_id)
         loss, _, visual_dict, meter_dict = model_fn(batch, model, epoch)
 
         ##### meter_dict
@@ -176,7 +178,7 @@ if __name__ == '__main__':
 
     ##### train and val
     for epoch in range(start_epoch, cfg.epochs + 1):
-        train_epoch(dataset.train_data_loader, model, model_fn, optimizer, epoch)
+        train_epoch(dataset, model, model_fn, optimizer, epoch)
 
         if utils.is_multiple(epoch, cfg.save_freq) or utils.is_power2(epoch):
             eval_epoch(dataset.val_data_loader, model, model_fn, epoch)
